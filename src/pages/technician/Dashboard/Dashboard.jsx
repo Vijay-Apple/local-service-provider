@@ -1,27 +1,48 @@
+import { useEffect, useState } from "react";
 import PageHeader from "../../../components/dashboard/PageHeader";
-import StatCard from "../../../components/dashboard/StatCard";
+import { getDashboard } from "../../../services/auth/technician.service";
 
 const Dashboard = () => {
-  const recentJobs = [
-    {
-      id: 1,
-      service: "AC Repair",
-      customer: "Rahul Sharma",
-      status: "In Progress",
-    },
-    {
-      id: 2,
-      service: "Electrician Service",
-      customer: "Amit Kumar",
-      status: "Completed",
-    },
-    {
-      id: 3,
-      service: "Plumbing Service",
-      customer: "Vijay Singh",
-      status: "Pending",
-    },
-  ];
+  const [dashboardData, setDashboardData] = useState({
+    assignedJobs: 0,
+    todayJobs: 0,
+    completedJobs: 0,
+    monthlyEarnings: 0,
+    recentJobs: [],
+  });
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const response = await getDashboard();
+
+        console.log("FULL RESPONSE =>", response);
+
+        if (response.success) {
+          console.log("DASHBOARD DATA =>", response.data);
+          setDashboardData(response.data);
+        }
+      } catch (error) {
+        console.error("Dashboard Error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-[60vh]">
+        Loading...
+      </div>
+    );
+  }
+
+  const recentJobs = dashboardData.recentJobs || [];
 
   return (
     <div className="space-y-8">
@@ -42,7 +63,7 @@ const Dashboard = () => {
               </span>
 
               <span className="px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-700 text-sm font-medium">
-                4 Jobs Today
+                {dashboardData.todayJobs} Jobs Today
               </span>
             </div>
 
@@ -57,26 +78,36 @@ const Dashboard = () => {
       <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm hover:shadow-xl transition">
           <p className="text-slate-500 text-sm">Assigned Jobs</p>
-          <h3 className="text-4xl font-bold text-indigo-600 mt-2">12</h3>
-          <p className="text-green-600 mt-2 text-sm">+3 this week</p>
+          <h3 className="text-4xl font-bold text-indigo-600 mt-2">
+            {dashboardData.assignedJobs}
+          </h3>
+          <p className="text-green-600 mt-2 text-sm">Total Assigned Jobs</p>
         </div>
 
         <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm hover:shadow-xl transition">
           <p className="text-slate-500 text-sm">Today's Jobs</p>
-          <h3 className="text-4xl font-bold text-indigo-600 mt-2">4</h3>
-          <p className="text-slate-600 mt-2 text-sm">2 Completed</p>
+          <h3 className="text-4xl font-bold text-indigo-600 mt-2">
+            {dashboardData.todayJobs}
+          </h3>
+          <p className="text-slate-600 mt-2 text-sm">
+            {dashboardData.completedJobs} Completed
+          </p>
         </div>
 
         <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm hover:shadow-xl transition">
-          <p className="text-slate-500 text-sm">Rating</p>
-          <h3 className="text-4xl font-bold text-indigo-600 mt-2">4.8★</h3>
-          <p className="text-slate-600 mt-2 text-sm">Based on 245 reviews</p>
+          <p className="text-slate-500 text-sm">Completed Jobs</p>
+          <h3 className="text-4xl font-bold text-indigo-600 mt-2">
+            {dashboardData.completedJobs}
+          </h3>
+          <p className="text-slate-600 mt-2 text-sm">Successfully Finished</p>
         </div>
 
         <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm hover:shadow-xl transition">
-          <p className="text-slate-500 text-sm">Monthly Earnings</p>
-          <h3 className="text-4xl font-bold text-indigo-600 mt-2">₹24,500</h3>
-          <p className="text-green-600 mt-2 text-sm">+12% from last month</p>
+          <p className="text-slate-500 text-sm">Total Earnings</p>
+          <h3 className="text-4xl font-bold text-indigo-600 mt-2">
+            ₹{dashboardData.monthlyEarnings}
+          </h3>
+          <p className="text-green-600 mt-2 text-sm">Lifetime Earnings</p>
         </div>
       </div>
 
@@ -93,34 +124,46 @@ const Dashboard = () => {
           </div>
 
           <div className="space-y-4">
-            {recentJobs.map((job) => (
-              <div
-                key={job.id}
-                className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-5 rounded-2xl bg-indigo-50/50 border border-indigo-100"
-              >
-                <div>
-                  <h3 className="font-semibold text-slate-900">
-                    {job.service}
-                  </h3>
-
-                  <p className="text-slate-600 mt-1">
-                    Customer: {job.customer}
-                  </p>
-                </div>
-
-                <span
-                  className={`px-4 py-2 rounded-full text-sm font-medium w-fit ${
-                    job.status === "Completed"
-                      ? "bg-green-100 text-green-700"
-                      : job.status === "In Progress"
-                        ? "bg-indigo-100 text-indigo-700"
-                        : "bg-yellow-100 text-yellow-700"
-                  }`}
+            {recentJobs.length > 0 ? (
+              recentJobs.map((job) => (
+                <div
+                  key={job._id}
+                  className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-5 rounded-2xl bg-indigo-50/50 border border-indigo-100"
                 >
-                  {job.status}
-                </span>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">
+                      {job.service}
+                    </h3>
+
+                    <p className="text-slate-600 mt-1">
+                      Customer: {job.customerName}
+                    </p>
+
+                    <p className="text-slate-500 text-sm">
+                      {job.customerPhone}
+                    </p>
+                  </div>
+
+                  <span
+                    className={`px-4 py-2 rounded-full text-sm font-medium w-fit ${
+                      job.status === "Completed"
+                        ? "bg-green-100 text-green-700"
+                        : job.status === "In Progress"
+                          ? "bg-indigo-100 text-indigo-700"
+                          : job.status === "Cancelled"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-yellow-100 text-yellow-700"
+                    }`}
+                  >
+                    {job.status}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-10 text-slate-500">
+                No recent jobs found
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -134,33 +177,72 @@ const Dashboard = () => {
             <div>
               <div className="flex justify-between mb-2">
                 <span className="text-slate-600">Job Completion</span>
-                <span className="text-indigo-600 font-semibold">92%</span>
+                <span className="text-indigo-600 font-semibold">
+                  {dashboardData.assignedJobs > 0
+                    ? Math.round(
+                        (dashboardData.completedJobs /
+                          dashboardData.assignedJobs) *
+                          100,
+                      )
+                    : 0}
+                  %
+                </span>
               </div>
 
               <div className="h-3 bg-indigo-100 rounded-full overflow-hidden">
-                <div className="h-full w-[92%] bg-indigo-600 rounded-full"></div>
+                <div
+                  className="h-full bg-indigo-600 rounded-full"
+                  style={{
+                    width: `${
+                      dashboardData.assignedJobs > 0
+                        ? Math.round(
+                            (dashboardData.completedJobs /
+                              dashboardData.assignedJobs) *
+                              100,
+                          )
+                        : 0
+                    }%`,
+                  }}
+                ></div>
               </div>
             </div>
 
             <div>
               <div className="flex justify-between mb-2">
-                <span className="text-slate-600">Customer Satisfaction</span>
-                <span className="text-indigo-600 font-semibold">98%</span>
+                <span className="text-slate-600">Today's Workload</span>
+                <span className="text-indigo-600 font-semibold">
+                  {dashboardData.todayJobs}
+                </span>
               </div>
 
               <div className="h-3 bg-indigo-100 rounded-full overflow-hidden">
-                <div className="h-full w-[98%] bg-indigo-600 rounded-full"></div>
+                <div
+                  className="h-full bg-indigo-600 rounded-full"
+                  style={{
+                    width: `${Math.min(dashboardData.todayJobs * 20, 100)}%`,
+                  }}
+                ></div>
               </div>
             </div>
 
             <div>
               <div className="flex justify-between mb-2">
-                <span className="text-slate-600">Attendance</span>
-                <span className="text-indigo-600 font-semibold">95%</span>
+                <span className="text-slate-600">Earnings Score</span>
+                <span className="text-indigo-600 font-semibold">
+                  ₹{dashboardData.monthlyEarnings}
+                </span>
               </div>
 
               <div className="h-3 bg-indigo-100 rounded-full overflow-hidden">
-                <div className="h-full w-[95%] bg-indigo-600 rounded-full"></div>
+                <div
+                  className="h-full bg-indigo-600 rounded-full"
+                  style={{
+                    width: `${Math.min(
+                      dashboardData.monthlyEarnings / 500,
+                      100,
+                    )}%`,
+                  }}
+                ></div>
               </div>
             </div>
           </div>
@@ -178,7 +260,7 @@ const Dashboard = () => {
 
           <p className="mt-4 text-white/90 max-w-2xl mx-auto">
             Complete jobs on time, maintain excellent ratings, and grow your
-            monthly earnings with ServiceHub.
+            earnings with ServiceHub.
           </p>
 
           <button className="mt-8 bg-white text-indigo-700 px-8 py-4 rounded-2xl font-semibold hover:scale-105 transition">

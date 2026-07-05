@@ -9,6 +9,7 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
     (config) => {
+        // apiClient.js
         const token = localStorage.getItem("accessToken");
 
         if (token) {

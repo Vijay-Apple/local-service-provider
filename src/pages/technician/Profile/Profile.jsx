@@ -1,6 +1,64 @@
+import { useEffect, useState } from "react";
 import PageHeader from "../../../components/dashboard/PageHeader";
+import {
+  getProfile,
+  updateProfile,
+} from "../../../services/auth/technician.service";
 
 const Profile = () => {
+  const [loading, setLoading] = useState(true);
+
+  const [profile, setProfile] = useState({
+    fullName: "",
+    phone: "",
+    city: "",
+    experience: "",
+    serviceCategory: "",
+    services: [],
+    skills: [],
+    serviceArea: "",
+    profileImage: "",
+    rating: 0,
+    completedJobs: 0,
+    monthlyEarnings: 0,
+  });
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const res = await getProfile();
+      setProfile(res.data);
+    } catch (error) {
+      console.log("Profile fetch error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const res = await updateProfile(profile);
+
+      setProfile(res.data);
+
+      alert("Profile updated successfully");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to update profile");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <p className="text-slate-500 text-lg">Loading profile...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Hero Section */}
@@ -19,11 +77,11 @@ const Profile = () => {
             </span>
 
             <span className="px-4 py-2 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-700 text-sm font-medium">
-              4.8★ Rating
+              {profile.rating || 0}★ Rating
             </span>
 
             <span className="px-4 py-2 rounded-full bg-blue-100 border border-blue-200 text-blue-700 text-sm font-medium">
-              120+ Jobs Completed
+              {profile.completedJobs || 0}+ Jobs Completed
             </span>
           </div>
         </div>
@@ -35,7 +93,7 @@ const Profile = () => {
           {/* Profile Image */}
           <div className="flex flex-col items-center">
             <img
-              src="https://i.pravatar.cc/300"
+              src={profile.profileImage || "https://i.pravatar.cc/300"}
               alt="Technician"
               className="w-36 h-36 rounded-full object-cover border-4 border-indigo-100"
             />
@@ -48,97 +106,198 @@ const Profile = () => {
           {/* Form */}
           <div className="flex-1">
             <div className="grid md:grid-cols-2 gap-5">
+              {/* Full Name */}
               <div>
                 <label className="block text-sm font-medium text-slate-600 mb-2">
                   Full Name
                 </label>
 
                 <input
-                  placeholder="Vijay Kumar"
+                  value={profile.fullName || ""}
+                  onChange={(e) =>
+                    setProfile({
+                      ...profile,
+                      fullName: e.target.value,
+                    })
+                  }
                   className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
 
+              {/* Phone */}
               <div>
                 <label className="block text-sm font-medium text-slate-600 mb-2">
                   Phone Number
                 </label>
 
                 <input
-                  placeholder="+91 9876543210"
+                  value={profile.phone || ""}
+                  onChange={(e) =>
+                    setProfile({
+                      ...profile,
+                      phone: e.target.value,
+                    })
+                  }
                   className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
 
+              {/* Experience */}
               <div>
                 <label className="block text-sm font-medium text-slate-600 mb-2">
                   Experience
                 </label>
 
                 <input
-                  placeholder="5 Years"
+                  type="number"
+                  value={profile.experience || ""}
+                  onChange={(e) =>
+                    setProfile({
+                      ...profile,
+                      experience: e.target.value,
+                    })
+                  }
                   className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
 
+              {/* City */}
               <div>
                 <label className="block text-sm font-medium text-slate-600 mb-2">
                   City
                 </label>
 
                 <input
-                  placeholder="Gurgaon"
+                  value={profile.city || ""}
+                  onChange={(e) =>
+                    setProfile({
+                      ...profile,
+                      city: e.target.value,
+                    })
+                  }
                   className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              {/* Service Category */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-600 mb-2">
+                  Service Category
+                </label>
+
+                <input
+                  value={profile.serviceCategory || ""}
+                  onChange={(e) =>
+                    setProfile({
+                      ...profile,
+                      serviceCategory: e.target.value,
+                    })
+                  }
+                  className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              {/* Services */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-600 mb-2">
+                  Services Offered
+                </label>
+
+                <textarea
+                  rows={5}
+                  value={profile.services?.join(", ") || ""}
+                  onChange={(e) =>
+                    setProfile({
+                      ...profile,
+                      services: e.target.value
+                        .split(",")
+                        .map((item) => item.trim())
+                        .filter(Boolean),
+                    })
+                  }
+                  placeholder="AC Repair, Electrical Work, Plumbing..."
+                  className="w-full border border-slate-200 rounded-2xl p-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              {/* Service Area */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-600 mb-2">
+                  Service Area
+                </label>
+
+                <input
+                  value={profile.serviceArea || ""}
+                  onChange={(e) =>
+                    setProfile({
+                      ...profile,
+                      serviceArea: e.target.value,
+                    })
+                  }
+                  placeholder="Delhi NCR"
+                  className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              {/* Skills */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-600 mb-2">
+                  Skills (comma separated)
+                </label>
+
+                <textarea
+                  rows={3}
+                  value={profile.skills?.join(", ") || ""}
+                  onChange={(e) =>
+                    setProfile({
+                      ...profile,
+                      skills: e.target.value
+                        .split(",")
+                        .map((item) => item.trim())
+                        .filter(Boolean),
+                    })
+                  }
+                  placeholder="AC Repair, Installation, Wiring"
+                  className="w-full border border-slate-200 rounded-2xl p-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
             </div>
 
-            {/* Services */}
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-slate-600 mb-2">
-                Services Offered
-              </label>
-
-              <textarea
-                rows={5}
-                placeholder="AC Repair, Electrician Services, Plumbing, RO Maintenance..."
-                className="w-full border border-slate-200 rounded-2xl p-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-
-            {/* Skills */}
+            {/* Skills Preview */}
             <div className="mt-6">
               <h3 className="font-semibold text-slate-900 mb-3">
                 Skills & Expertise
               </h3>
 
               <div className="flex flex-wrap gap-3">
-                <span className="px-4 py-2 rounded-full bg-indigo-100 text-indigo-700">
-                  AC Repair
-                </span>
-
-                <span className="px-4 py-2 rounded-full bg-blue-100 text-blue-700">
-                  Electrical
-                </span>
-
-                <span className="px-4 py-2 rounded-full bg-violet-100 text-violet-700">
-                  Plumbing
-                </span>
-
-                <span className="px-4 py-2 rounded-full bg-cyan-100 text-cyan-700">
-                  Installation
-                </span>
+                {profile.skills?.length > 0 ? (
+                  profile.skills.map((skill, index) => (
+                    <span
+                      key={index}
+                      className="px-4 py-2 rounded-full bg-indigo-100 text-indigo-700"
+                    >
+                      {skill}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-slate-500">No skills added yet</p>
+                )}
               </div>
             </div>
 
-            {/* Save */}
+            {/* Save Buttons */}
             <div className="mt-8 flex flex-wrap gap-4">
-              <button className="px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold hover:shadow-xl transition">
+              <button
+                onClick={handleSave}
+                className="px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold hover:shadow-xl transition"
+              >
                 Save Changes
               </button>
 
-              <button className="px-8 py-4 rounded-2xl border border-slate-200 hover:bg-slate-50 transition font-medium">
-                Cancel
+              <button
+                onClick={fetchProfile}
+                className="px-8 py-4 rounded-2xl border border-slate-200 hover:bg-slate-50 transition font-medium"
+              >
+                Reset
               </button>
             </div>
           </div>
@@ -149,22 +308,30 @@ const Profile = () => {
       <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm">
           <p className="text-slate-500">Completed Jobs</p>
-          <h3 className="text-4xl font-bold text-indigo-600 mt-2">120+</h3>
+          <h3 className="text-4xl font-bold text-indigo-600 mt-2">
+            {profile.completedJobs || 0}
+          </h3>
         </div>
 
         <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm">
           <p className="text-slate-500">Customer Rating</p>
-          <h3 className="text-4xl font-bold text-indigo-600 mt-2">4.8★</h3>
+          <h3 className="text-4xl font-bold text-indigo-600 mt-2">
+            {profile.rating || 0}★
+          </h3>
         </div>
 
         <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm">
           <p className="text-slate-500">Experience</p>
-          <h3 className="text-4xl font-bold text-indigo-600 mt-2">5 Yrs</h3>
+          <h3 className="text-4xl font-bold text-indigo-600 mt-2">
+            {profile.experience || 0} Yrs
+          </h3>
         </div>
 
         <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm">
           <p className="text-slate-500">Monthly Earnings</p>
-          <h3 className="text-4xl font-bold text-indigo-600 mt-2">₹24K+</h3>
+          <h3 className="text-4xl font-bold text-indigo-600 mt-2">
+            ₹{profile.monthlyEarnings?.toLocaleString() || 0}
+          </h3>
         </div>
       </div>
 

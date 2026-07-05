@@ -1,5 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageHeader from "../../../components/dashboard/PageHeader";
+import {
+  getSettings,
+  updateSettings,
+  changePassword,
+} from "../../../services/auth/technician.service";
 
 const Settings = () => {
   const [settings, setSettings] = useState({
@@ -9,6 +14,35 @@ const Settings = () => {
     autoAcceptJobs: false,
   });
 
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await getSettings();
+
+      if (res.success && res.data) {
+        setSettings({
+          jobNotifications: res.data.jobNotifications,
+          smsAlerts: res.data.smsAlerts,
+          availabilityVisible: res.data.availabilityVisible,
+          autoAcceptJobs: res.data.autoAcceptJobs,
+        });
+      }
+    } catch (error) {
+      console.error("Settings fetch error:", error);
+    }
+  };
+
   const handleToggle = (field) => {
     setSettings((prev) => ({
       ...prev,
@@ -16,9 +50,40 @@ const Settings = () => {
     }));
   };
 
+  const saveSettings = async () => {
+    try {
+      setLoading(true);
+
+      const res = await updateSettings(settings);
+
+      alert(res.message || "Settings updated successfully");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to update settings");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    try {
+      const res = await changePassword(passwordData);
+
+      alert(res.message);
+
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      alert(error?.response?.data?.message || "Failed to change password");
+    }
+  };
+
   return (
     <div className="space-y-8">
-      {/* Hero Section */}
+      {/* Hero */}
       <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-indigo-50 via-white to-blue-50 border border-indigo-100 p-8 md:p-12 shadow-sm">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-indigo-200/30 blur-3xl rounded-full"></div>
 
@@ -77,9 +142,17 @@ const Settings = () => {
             </div>
           ))}
         </div>
+
+        <button
+          onClick={saveSettings}
+          disabled={loading}
+          className="mt-8 px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold hover:shadow-xl transition"
+        >
+          {loading ? "Saving..." : "Save Preferences"}
+        </button>
       </div>
 
-      {/* Password Section */}
+      {/* Password */}
       <div className="bg-white border border-indigo-100 rounded-[32px] p-8 shadow-sm">
         <h2 className="text-2xl font-bold text-slate-900 mb-8">
           Change Password
@@ -89,85 +162,77 @@ const Settings = () => {
           <input
             type="password"
             placeholder="Current Password"
-            className="border border-slate-200 rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            value={passwordData.currentPassword}
+            onChange={(e) =>
+              setPasswordData({
+                ...passwordData,
+                currentPassword: e.target.value,
+              })
+            }
+            className="border border-slate-200 rounded-2xl px-4 py-4"
           />
 
           <input
             type="password"
             placeholder="New Password"
-            className="border border-slate-200 rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            value={passwordData.newPassword}
+            onChange={(e) =>
+              setPasswordData({
+                ...passwordData,
+                newPassword: e.target.value,
+              })
+            }
+            className="border border-slate-200 rounded-2xl px-4 py-4"
           />
 
           <input
             type="password"
             placeholder="Confirm Password"
-            className="border border-slate-200 rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            value={passwordData.confirmPassword}
+            onChange={(e) =>
+              setPasswordData({
+                ...passwordData,
+                confirmPassword: e.target.value,
+              })
+            }
+            className="border border-slate-200 rounded-2xl px-4 py-4"
           />
         </div>
 
-        <button className="mt-6 px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold hover:shadow-xl transition">
+        <button
+          onClick={handlePasswordChange}
+          className="mt-6 px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold hover:shadow-xl transition"
+        >
           Update Password
         </button>
       </div>
 
-      {/* Notification Stats */}
+      {/* Stats */}
       <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm">
-          <p className="text-slate-500">Jobs Completed</p>
-          <h3 className="text-4xl font-bold text-indigo-600 mt-2">120+</h3>
+          <p className="text-slate-500">Notification Settings</p>
+          <h3 className="text-4xl font-bold text-indigo-600 mt-2">4</h3>
         </div>
 
         <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm">
-          <p className="text-slate-500">Notification Rate</p>
-          <h3 className="text-4xl font-bold text-indigo-600 mt-2">100%</h3>
+          <p className="text-slate-500">Job Alerts</p>
+          <h3 className="text-4xl font-bold text-indigo-600 mt-2">
+            {settings.jobNotifications ? "ON" : "OFF"}
+          </h3>
         </div>
 
         <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm">
-          <p className="text-slate-500">Response Time</p>
-          <h3 className="text-4xl font-bold text-indigo-600 mt-2">5 Min</h3>
+          <p className="text-slate-500">SMS Alerts</p>
+          <h3 className="text-4xl font-bold text-indigo-600 mt-2">
+            {settings.smsAlerts ? "ON" : "OFF"}
+          </h3>
         </div>
 
         <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm">
-          <p className="text-slate-500">Account Status</p>
-          <h3 className="text-4xl font-bold text-green-600 mt-2">Active</h3>
-        </div>
-      </div>
-
-      {/* Danger Zone */}
-      <div className="bg-white border border-red-200 rounded-[32px] p-8 shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div>
-            <h2 className="text-2xl font-bold text-red-600">Danger Zone</h2>
-
-            <p className="mt-3 text-slate-500 max-w-xl">
-              Permanently delete your technician account and all associated
-              service history. This action cannot be undone.
-            </p>
-          </div>
-
-          <button className="px-8 py-4 rounded-2xl bg-red-600 text-white font-semibold hover:bg-red-700 transition">
-            Delete Account
-          </button>
-        </div>
-      </div>
-
-      {/* CTA */}
-      <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-600 p-10 text-white shadow-xl">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-white/10 blur-3xl rounded-full"></div>
-
-        <div className="relative z-10 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold">
-            Customize Your Work Experience
-          </h2>
-
-          <p className="mt-4 text-white/90 max-w-2xl mx-auto">
-            Control notifications, availability and security settings to manage
-            your technician account more efficiently.
-          </p>
-
-          <button className="mt-8 bg-white text-indigo-700 px-8 py-4 rounded-2xl font-semibold hover:scale-105 transition">
-            Save All Preferences
-          </button>
+          <p className="text-slate-500">Auto Accept</p>
+          <h3 className="text-4xl font-bold text-green-600 mt-2">
+            {settings.autoAcceptJobs ? "ON" : "OFF"}
+          </h3>
         </div>
       </div>
     </div>

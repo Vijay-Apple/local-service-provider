@@ -1,15 +1,59 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageHeader from "../../../components/dashboard/PageHeader";
+import {
+  getAvailability,
+  updateAvailability,
+} from "../../../services/auth/technician.service";
 
 const Availability = () => {
-  const [available, setAvailable] = useState(true);
+  const [availabilityData, setAvailabilityData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchAvailability = async () => {
+    try {
+      const res = await getAvailability();
+
+      setAvailabilityData(res.data);
+    } catch (error) {
+      console.error("Error fetching availability:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAvailability();
+  }, []);
+
+  const toggleAvailability = async () => {
+    try {
+      const newStatus = !availabilityData.availability;
+
+      await updateAvailability({
+        availability: newStatus,
+      });
+
+      setAvailabilityData((prev) => ({
+        ...prev,
+        availability: newStatus,
+      }));
+    } catch (error) {
+      console.error("Error updating availability:", error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center text-slate-500">
+        Loading availability...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
       {/* Hero */}
       <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-indigo-50 via-white to-blue-50 border border-indigo-100 p-8 md:p-12 shadow-sm">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-indigo-200/30 blur-3xl rounded-full"></div>
-
         <div className="relative z-10">
           <PageHeader
             title="Availability Management"
@@ -23,12 +67,14 @@ const Availability = () => {
 
             <span
               className={`px-4 py-2 rounded-full text-sm font-medium border ${
-                available
+                availabilityData?.availability
                   ? "bg-green-100 border-green-200 text-green-700"
                   : "bg-red-100 border-red-200 text-red-700"
               }`}
             >
-              {available ? "Currently Available" : "Currently Unavailable"}
+              {availabilityData?.availability
+                ? "Currently Available"
+                : "Currently Unavailable"}
             </span>
           </div>
         </div>
@@ -48,54 +94,55 @@ const Availability = () => {
           </div>
 
           <button
-            onClick={() => setAvailable(!available)}
+            onClick={toggleAvailability}
             className={`px-8 py-4 rounded-2xl font-semibold transition-all duration-300 ${
-              available
-                ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:shadow-lg"
-                : "bg-gradient-to-r from-red-500 to-rose-500 text-white hover:shadow-lg"
+              availabilityData?.availability
+                ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
+                : "bg-gradient-to-r from-red-500 to-rose-500 text-white"
             }`}
           >
-            {available ? "✓ Available" : "✕ Unavailable"}
+            {availabilityData?.availability ? "✓ Available" : "✕ Unavailable"}
           </button>
         </div>
       </div>
 
-      {/* Schedule Cards */}
+      {/* Dynamic Cards */}
       <div className="grid lg:grid-cols-3 gap-6">
-        <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm hover:shadow-xl transition">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center text-2xl">
-            📅
-          </div>
+        <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm">
+          <div className="text-2xl">📅</div>
 
           <h3 className="text-xl font-bold text-slate-900 mt-5">
             Working Days
           </h3>
 
-          <p className="text-slate-600 mt-3">Monday - Saturday</p>
+          <p className="text-slate-600 mt-3">
+            {availabilityData?.workingDays?.join(", ") || "Not Set"}
+          </p>
         </div>
 
-        <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm hover:shadow-xl transition">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center text-2xl">
-            ⏰
-          </div>
+        <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm">
+          <div className="text-2xl">⏰</div>
 
           <h3 className="text-xl font-bold text-slate-900 mt-5">
             Working Hours
           </h3>
 
-          <p className="text-slate-600 mt-3">9:00 AM - 7:00 PM</p>
+          <p className="text-slate-600 mt-3">
+            {availabilityData?.workingHours?.start} -{" "}
+            {availabilityData?.workingHours?.end}
+          </p>
         </div>
 
-        <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm hover:shadow-xl transition">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center text-2xl">
-            📍
-          </div>
+        <div className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm">
+          <div className="text-2xl">📍</div>
 
           <h3 className="text-xl font-bold text-slate-900 mt-5">
             Service Area
           </h3>
 
-          <p className="text-slate-600 mt-3">Delhi NCR Region</p>
+          <p className="text-slate-600 mt-3">
+            {availabilityData?.serviceArea || "Not Set"}
+          </p>
         </div>
       </div>
 
@@ -106,45 +153,38 @@ const Availability = () => {
         </h2>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-7 gap-4">
-          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
-            <div
-              key={day}
-              className={`rounded-2xl p-4 text-center border ${
-                day === "Sun"
-                  ? "bg-red-50 border-red-100"
-                  : "bg-indigo-50 border-indigo-100"
-              }`}
-            >
-              <h4 className="font-semibold text-slate-900">{day}</h4>
+          {[
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+          ].map((day) => {
+            const isWorkingDay = availabilityData?.workingDays?.includes(day);
 
-              <p className="mt-2 text-sm text-slate-600">
-                {day === "Sun" ? "Off Day" : "9 AM - 7 PM"}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
+            return (
+              <div
+                key={day}
+                className={`rounded-2xl p-4 text-center border ${
+                  isWorkingDay
+                    ? "bg-indigo-50 border-indigo-100"
+                    : "bg-red-50 border-red-100"
+                }`}
+              >
+                <h4 className="font-semibold text-slate-900">
+                  {day.slice(0, 3)}
+                </h4>
 
-      {/* CTA */}
-      <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-600 p-10 text-white shadow-xl">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-white/10 blur-3xl rounded-full"></div>
-
-        <div className="relative z-10 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold">
-            Stay Available, Earn More
-          </h2>
-
-          <p className="mt-4 text-white/90 max-w-2xl mx-auto">
-            Keep your availability updated to receive more service requests and
-            maximize your monthly earnings on ServiceHub.
-          </p>
-
-          <button
-            onClick={() => setAvailable(!available)}
-            className="mt-8 bg-white text-indigo-700 px-8 py-4 rounded-2xl font-semibold hover:scale-105 transition"
-          >
-            {available ? "Go Offline" : "Go Online"}
-          </button>
+                <p className="mt-2 text-sm text-slate-600">
+                  {isWorkingDay
+                    ? `${availabilityData?.workingHours?.start} - ${availabilityData?.workingHours?.end}`
+                    : "Off Day"}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

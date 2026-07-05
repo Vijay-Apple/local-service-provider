@@ -44,7 +44,8 @@ const Login = () => {
         role: formData.role,
       });
 
-      localStorage.setItem("token", response.token);
+      // IMPORTANT: accessToken save karo
+      localStorage.setItem("accessToken", response.token);
       localStorage.setItem("user", JSON.stringify(response.user));
 
       dispatch(
