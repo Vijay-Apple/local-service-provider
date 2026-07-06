@@ -1,6 +1,6 @@
 import apiClient from "../api/apiClient";
 
-const API_URL = "/api/v1/admin";
+const API_URL = "/admin";
 
 /*
 ========================================

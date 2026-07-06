@@ -1,6 +1,6 @@
 import apiClient from "../api/apiClient";
 
-const API_URL = "/api/v1/public";
+const API_URL = "/public";
 
 // CONTACT
 export const createContact = async (data) => {
@@ -8,7 +8,6 @@ export const createContact = async (data) => {
     return response.data;
 };
 
-// ABOUT
 export const getAboutPage = async () => {
     const response = await apiClient.get(`${API_URL}/about`);
     return response.data;

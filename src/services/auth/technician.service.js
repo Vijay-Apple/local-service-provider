@@ -1,6 +1,6 @@
 import apiClient from "../api/apiClient";
 
-const API_URL = "/api/v1/technician";
+const API_URL = "/technician";
 
 /* Dashboard */
 export const getDashboard = async () => {
