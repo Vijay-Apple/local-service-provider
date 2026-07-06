@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { createUser } from "../../../services/auth/admin.service";
 
 const AddUser = () => {
   const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -20,32 +22,30 @@ const AddUser = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const token = localStorage.getItem("token");
-
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/admin/users",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      setLoading(true);
 
-      console.log("USER CREATED:", res.data);
-      navigate("/admin/users");
+      const response = await createUser(formData);
+
+      if (response.success) {
+        alert("User created successfully");
+        navigate("/admin/users");
+      }
     } catch (error) {
-      console.log("ERROR:", error.response?.data || error.message);
+      console.error(error);
+
+      alert(error?.response?.data?.message || "Failed to create user");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,10 +64,11 @@ const AddUser = () => {
         </div>
       </div>
 
-      {/* Form Card */}
+      {/* Form */}
       <div className="bg-white rounded-[32px] border border-slate-200 shadow-sm p-6 md:p-8">
         <form onSubmit={handleSubmit}>
           <div className="grid md:grid-cols-2 gap-6">
+            {/* Full Name */}
             <div>
               <label className="block mb-2 text-sm font-medium text-slate-700">
                 Full Name
@@ -78,12 +79,12 @@ const AddUser = () => {
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleChange}
-                placeholder="Enter full name"
-                className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 required
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
+            {/* Email */}
             <div>
               <label className="block mb-2 text-sm font-medium text-slate-700">
                 Email Address
@@ -94,12 +95,12 @@ const AddUser = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="Enter email"
-                className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 required
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
+            {/* Phone */}
             <div>
               <label className="block mb-2 text-sm font-medium text-slate-700">
                 Phone Number
@@ -110,12 +111,12 @@ const AddUser = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="Enter phone"
-                className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 required
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
+            {/* City */}
             <div>
               <label className="block mb-2 text-sm font-medium text-slate-700">
                 City
@@ -126,12 +127,12 @@ const AddUser = () => {
                 name="city"
                 value={formData.city}
                 onChange={handleChange}
-                placeholder="Enter city"
-                className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 required
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
+            {/* Password */}
             <div>
               <label className="block mb-2 text-sm font-medium text-slate-700">
                 Password
@@ -142,12 +143,12 @@ const AddUser = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="Enter password"
-                className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 required
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
+            {/* Role */}
             <div>
               <label className="block mb-2 text-sm font-medium text-slate-700">
                 Role
@@ -164,6 +165,8 @@ const AddUser = () => {
                 <option value="admin">Admin</option>
               </select>
             </div>
+
+            {/* Technician Fields */}
             {formData.role === "technician" && (
               <>
                 <div>
@@ -191,13 +194,13 @@ const AddUser = () => {
                     name="experience"
                     value={formData.experience}
                     onChange={handleChange}
-                    placeholder="Enter experience"
                     className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </>
             )}
 
+            {/* Status */}
             <div>
               <label className="block mb-2 text-sm font-medium text-slate-700">
                 Account Status
@@ -215,13 +218,14 @@ const AddUser = () => {
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 mt-10">
             <button
               type="submit"
-              className="px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-semibold hover:shadow-xl hover:shadow-indigo-500/30 transition"
+              disabled={loading}
+              className="px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-semibold hover:shadow-xl hover:shadow-indigo-500/30 transition disabled:opacity-50"
             >
-              Create User
+              {loading ? "Creating..." : "Create User"}
             </button>
 
             <button
@@ -235,10 +239,8 @@ const AddUser = () => {
         </form>
       </div>
 
-      {/* Bottom CTA */}
+      {/* Footer CTA */}
       <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 border border-indigo-500/20 p-10">
-        <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-[350px] h-[350px] bg-indigo-600/20 blur-3xl rounded-full"></div>
-
         <div className="relative z-10 text-center">
           <h2 className="text-3xl font-bold text-white">
             Manage Users Efficiently

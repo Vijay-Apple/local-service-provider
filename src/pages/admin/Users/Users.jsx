@@ -1,38 +1,72 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageHeader from "../../../components/dashboard/PageHeader";
 import { useNavigate } from "react-router-dom";
-
-const usersData = [
-  {
-    id: "USR001",
-    name: "Vijay Kumar",
-    email: "vijay@gmail.com",
-    role: "Customer",
-    status: "Active",
-  },
-  {
-    id: "USR002",
-    name: "Rahul Sharma",
-    email: "rahul@gmail.com",
-    role: "Technician",
-    status: "Active",
-  },
-  {
-    id: "USR003",
-    name: "Amit Kumar",
-    email: "amit@gmail.com",
-    role: "Customer",
-    status: "Blocked",
-  },
-];
+import { getAllUsers, deleteUser } from "../../../services/auth/admin.service";
 
 const Users = () => {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
 
-  const filteredUsers = usersData.filter((user) =>
-    user.name.toLowerCase().includes(search.toLowerCase()),
+  const [search, setSearch] = useState("");
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await getAllUsers();
+
+      if (response.success) {
+        setUsers(response.users);
+      }
+    } catch (error) {
+      console.error("Users Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this user?",
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await deleteUser(id);
+
+      setUsers((prev) => prev.filter((user) => user._id !== id));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const filteredUsers = users.filter(
+    (user) =>
+      user.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+      user.email?.toLowerCase().includes(search.toLowerCase()),
   );
+
+  const totalUsers = users.length;
+
+  const totalCustomers = users.filter(
+    (user) => user.role === "customer",
+  ).length;
+
+  const totalTechnicians = users.filter(
+    (user) => user.role === "technician",
+  ).length;
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        Loading users...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -59,17 +93,21 @@ const Users = () => {
       <div className="grid md:grid-cols-3 gap-6">
         <div className="rounded-3xl bg-gradient-to-r from-indigo-600 to-indigo-500 p-6 text-white">
           <p className="text-indigo-100">Total Users</p>
-          <h3 className="text-4xl font-bold mt-2">12,458</h3>
+          <h3 className="text-4xl font-bold mt-2">{totalUsers}</h3>
         </div>
 
         <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
           <p className="text-slate-500">Customers</p>
-          <h3 className="text-4xl font-bold text-slate-900 mt-2">9,874</h3>
+          <h3 className="text-4xl font-bold text-slate-900 mt-2">
+            {totalCustomers}
+          </h3>
         </div>
 
         <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
           <p className="text-slate-500">Technicians</p>
-          <h3 className="text-4xl font-bold text-slate-900 mt-2">1,235</h3>
+          <h3 className="text-4xl font-bold text-slate-900 mt-2">
+            {totalTechnicians}
+          </h3>
         </div>
       </div>
 
@@ -93,6 +131,7 @@ const Users = () => {
                 <th className="text-left p-5">User</th>
                 <th className="text-left p-5">Email</th>
                 <th className="text-left p-5">Role</th>
+                <th className="text-left p-5">City</th>
                 <th className="text-left p-5">Status</th>
                 <th className="text-left p-5">Actions</th>
               </tr>
@@ -101,23 +140,25 @@ const Users = () => {
             <tbody>
               {filteredUsers.map((user) => (
                 <tr
-                  key={user.id}
+                  key={user._id}
                   className="border-b hover:bg-indigo-50 transition"
                 >
                   <td className="p-5">
                     <div className="flex items-center gap-4">
                       <img
-                        src={`https://i.pravatar.cc/100?u=${user.id}`}
-                        alt={user.name}
+                        src={`https://i.pravatar.cc/100?u=${user._id}`}
+                        alt={user.fullName}
                         className="w-12 h-12 rounded-full"
                       />
 
                       <div>
                         <h4 className="font-semibold text-slate-900">
-                          {user.name}
+                          {user.fullName}
                         </h4>
 
-                        <p className="text-sm text-slate-500">{user.id}</p>
+                        <p className="text-sm text-slate-500">
+                          {user._id.slice(-6)}
+                        </p>
                       </div>
                     </div>
                   </td>
@@ -125,15 +166,17 @@ const Users = () => {
                   <td className="p-5 text-slate-600">{user.email}</td>
 
                   <td className="p-5">
-                    <span className="px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-700">
+                    <span className="px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-700 capitalize">
                       {user.role}
                     </span>
                   </td>
 
+                  <td className="p-5">{user.city}</td>
+
                   <td className="p-5">
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        user.status === "Active"
+                        user.status === "active"
                           ? "bg-green-100 text-green-700"
                           : "bg-red-100 text-red-700"
                       }`}
@@ -144,21 +187,40 @@ const Users = () => {
 
                   <td className="p-5">
                     <div className="flex flex-wrap gap-2">
-                      <button className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 transition">
+                      <button
+                        onClick={() => navigate(`/admin/users/${user._id}`)}
+                        className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 transition"
+                      >
                         View
                       </button>
 
-                      <button className="px-4 py-2 rounded-xl bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition">
+                      <button
+                        onClick={() =>
+                          navigate(`/admin/users/edit/${user._id}`)
+                        }
+                        className="px-4 py-2 rounded-xl bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition"
+                      >
                         Edit
                       </button>
 
-                      <button className="px-4 py-2 rounded-xl bg-red-500 text-white hover:bg-red-600 transition">
+                      <button
+                        onClick={() => handleDelete(user._id)}
+                        className="px-4 py-2 rounded-xl bg-red-500 text-white hover:bg-red-600 transition"
+                      >
                         Delete
                       </button>
                     </div>
                   </td>
                 </tr>
               ))}
+
+              {filteredUsers.length === 0 && (
+                <tr>
+                  <td colSpan="6" className="text-center py-10 text-slate-500">
+                    No users found
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

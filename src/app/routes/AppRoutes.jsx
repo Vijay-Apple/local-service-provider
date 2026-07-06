@@ -51,6 +51,7 @@ import Payments from "../../pages/admin/Payments/Payments";
 import Analytics from "../../pages/admin/Analytics/Analytics";
 import AdminSettings from "../../pages/admin/Settings/Settings";
 import AddUser from "../../pages/admin/Users/AddUser";
+import AddServices from "../../pages/admin/Services/AddServices";
 
 const router = createBrowserRouter([
   /* =========================
@@ -246,8 +247,12 @@ const router = createBrowserRouter([
         element: <AdminSettings />,
       },
       {
-        path: "/admin/users/add",
+        path: "admin/users/add",
         element: <AddUser />,
+      },
+      {
+        path: "services/create",
+        element: <AddServices />,
       },
     ],
   },

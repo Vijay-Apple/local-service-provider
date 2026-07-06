@@ -1,14 +1,79 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { getDashboard } from "../../../services/auth/customer.service";
 
 const Dashboard = () => {
+  const [dashboard, setDashboard] = useState({
+    totalBookings: 0,
+    activeServices: 0,
+    serviceRecords: 0,
+    reminders: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboard();
+  }, []);
+
+  const fetchDashboard = async () => {
+    try {
+      const res = await getDashboard();
+
+      if (res.success) {
+        setDashboard(res.data);
+      }
+    } catch (error) {
+      console.error("Dashboard Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const cardVariant = {
     hidden: { opacity: 0, y: 20 },
     visible: (i) => ({
       opacity: 1,
       y: 0,
-      transition: { delay: i * 0.1, duration: 0.5 },
+      transition: {
+        delay: i * 0.1,
+        duration: 0.5,
+      },
     }),
   };
+
+  const stats = [
+    {
+      label: "Total Bookings",
+      value: dashboard.totalBookings,
+      color: "indigo",
+    },
+    {
+      label: "Active Services",
+      value: dashboard.activeServices,
+      color: "green",
+    },
+    {
+      label: "Service Records",
+      value: dashboard.serviceRecords,
+      color: "blue",
+    },
+    {
+      label: "Reminders",
+      value: dashboard.reminders,
+      color: "amber",
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-[400px]">
+        <p className="text-lg font-medium text-slate-500">
+          Loading Dashboard...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -18,7 +83,6 @@ const Dashboard = () => {
         animate={{ opacity: 1, y: 0 }}
         className="relative overflow-hidden rounded-[32px] bg-gradient-to-r from-indigo-700 via-violet-700 to-cyan-600 p-8 md:p-10 text-white shadow-xl"
       >
-        {/* Glow effect */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 blur-3xl rounded-full"></div>
 
         <div className="relative z-10">
@@ -29,15 +93,14 @@ const Dashboard = () => {
             real time.
           </p>
 
-          {/* badges */}
           <div className="flex flex-wrap gap-3 mt-5">
             {["Fast Booking", "Live Tracking", "Trusted Technicians"].map(
-              (t, i) => (
+              (item, index) => (
                 <span
-                  key={i}
+                  key={index}
                   className="px-4 py-2 rounded-full bg-white/10 border border-white/20 text-sm backdrop-blur-md"
                 >
-                  {t}
+                  {item}
                 </span>
               ),
             )}
@@ -47,20 +110,15 @@ const Dashboard = () => {
 
       {/* KPI CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { label: "Total Bookings", value: "12", color: "indigo" },
-          { label: "Active Services", value: "3", color: "green" },
-          { label: "Service Records", value: "18", color: "blue" },
-          { label: "Reminders", value: "2", color: "amber" },
-        ].map((item, i) => (
+        {stats.map((item, index) => (
           <motion.div
-            key={i}
-            custom={i}
+            key={index}
+            custom={index}
             variants={cardVariant}
             initial="hidden"
             animate="visible"
             whileHover={{ scale: 1.05 }}
-            className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm transition"
+            className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm"
           >
             <p className="text-slate-500">{item.label}</p>
 
@@ -105,13 +163,13 @@ const Dashboard = () => {
               color: "from-green-500 to-emerald-500",
             },
             {
-              title: "History",
-              desc: "Past services",
+              title: "Service Records",
+              desc: "View history",
               color: "from-violet-500 to-purple-500",
             },
-          ].map((item, i) => (
+          ].map((item, index) => (
             <motion.div
-              key={i}
+              key={index}
               whileHover={{ scale: 1.03 }}
               className={`p-5 rounded-2xl text-white bg-gradient-to-r ${item.color} shadow-md cursor-pointer`}
             >
@@ -122,41 +180,44 @@ const Dashboard = () => {
         </div>
       </motion.div>
 
-      {/* INSIGHTS */}
+      {/* SUMMARY */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-white border border-indigo-100 rounded-3xl p-6 shadow-sm"
       >
         <h2 className="text-xl font-semibold mb-5 text-slate-800">
-          Your Insights
+          Account Summary
         </h2>
 
         <div className="space-y-4">
-          {[
-            { label: "Most Used Service", value: "AC Repair", color: "indigo" },
-            { label: "Avg Response Time", value: "18 mins", color: "green" },
-            { label: "Rating", value: "4.8 ⭐", color: "amber" },
-          ].map((item, i) => (
-            <div
-              key={i}
-              className="flex justify-between items-center p-4 rounded-2xl border hover:bg-slate-50 transition"
-            >
-              <span className="text-slate-700">{item.label}</span>
+          <div className="flex justify-between items-center p-4 rounded-2xl border">
+            <span>Total Bookings</span>
+            <span className="font-semibold text-indigo-600">
+              {dashboard.totalBookings}
+            </span>
+          </div>
 
-              <span
-                className={`font-semibold ${
-                  item.color === "indigo"
-                    ? "text-indigo-600"
-                    : item.color === "green"
-                      ? "text-green-600"
-                      : "text-amber-500"
-                }`}
-              >
-                {item.value}
-              </span>
-            </div>
-          ))}
+          <div className="flex justify-between items-center p-4 rounded-2xl border">
+            <span>Active Services</span>
+            <span className="font-semibold text-green-600">
+              {dashboard.activeServices}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center p-4 rounded-2xl border">
+            <span>Service Records</span>
+            <span className="font-semibold text-blue-600">
+              {dashboard.serviceRecords}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center p-4 rounded-2xl border">
+            <span>Upcoming Reminders</span>
+            <span className="font-semibold text-amber-500">
+              {dashboard.reminders}
+            </span>
+          </div>
         </div>
       </motion.div>
     </div>
