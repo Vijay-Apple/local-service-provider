@@ -1,6 +1,6 @@
 import apiClient from "../api/apiClient";
 
-const API_URL = "http://localhost:5000/api/v1/public";
+const API_URL = "/api/v1/public";
 
 // CONTACT
 export const createContact = async (data) => {
