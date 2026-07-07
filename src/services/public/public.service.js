@@ -122,3 +122,46 @@ export const cancelBooking = async (bookingId) => {
     return response.data;
 };
 
+// home routes
+
+export const getAllCategories = async () => {
+    const response = await apiClient.get(`${API_URL}/categories`);
+    return response.data;
+};
+
+export const getHomeSettings = async () => {
+    const response = await apiClient.get(`${API_URL}/home-settings`);
+    return response.data;
+}
+export const updateHomeSettings = async (data) => {
+    const response = await apiClient.post(`${API_URL}/home-settings`, data);
+    return response.data;
+}
+export const getFooter = async () => {
+    const response = await apiClient.get(`${API_URL}/footer`);
+    return response.data;
+}
+export const updateFooter = async (data) => {
+    const response = await apiClient.post(`${API_URL}/footer`, data);
+    return response.data;
+}
+export const getHero = async () => {
+    const response = await apiClient.get(`${API_URL}/hero`);
+    return response.data;
+}
+export const updateHero = async (data) => {
+    const response = await apiClient.post(`${API_URL}/hero`, data);
+    return response.data;
+}
+export const getHomeRecord = async () => {
+    const response = await apiClient.get(`${API_URL}/home-record`);
+    return response.data;
+}
+export const updateHomeRecord = async (data) => {
+    const response = await apiClient.post(`${API_URL}/home-record`, data);
+    return response.data;
+}
+export const getHomePage = async () => {
+    const response = await apiClient.get(`${API_URL}/home`);
+    return response.data;
+}

@@ -1,6 +1,9 @@
-import { useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
-import { resetPassword } from "../../../services/auth/auth.service";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import {
+  resetPassword,
+  resetPasswordForm,
+} from "../../../services/auth/auth.service";
 
 const ResetPassword = () => {
   const { token } = useParams();
@@ -12,32 +15,59 @@ const ResetPassword = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [checkingToken, setCheckingToken] = useState(true);
+  const [tokenValid, setTokenValid] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    validateToken();
+  }, []);
+
+  const validateToken = async () => {
+    try {
+      setCheckingToken(true);
+
+      const response = await resetPasswordForm(token);
+
+      if (response?.success) {
+        setTokenValid(true);
+      } else {
+        setError("Invalid or expired reset link");
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || "Invalid or expired reset link");
+    } finally {
+      setCheckingToken(false);
+    }
+  };
+
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value,
-    });
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setError("");
+    setMessage("");
+
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return;
+      return setError("Passwords do not match");
     }
 
     try {
       setLoading(true);
-      setError("");
-      setMessage("");
 
-      const response = await resetPassword(token, formData);
+      const response = await resetPassword(token, {
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+      });
 
-      setMessage(response.message || "Password updated successfully");
+      setMessage(response?.message || "Password updated successfully");
 
       setTimeout(() => {
         navigate("/login");
@@ -48,6 +78,33 @@ const ResetPassword = () => {
       setLoading(false);
     }
   };
+
+  if (checkingToken) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg font-medium">Verifying reset link...</div>
+      </div>
+    );
+  }
+
+  if (!tokenValid) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border w-full max-w-md text-center">
+          <h2 className="text-2xl font-bold text-red-600">Invalid Link</h2>
+
+          <p className="mt-3 text-slate-600">{error}</p>
+
+          <Link
+            to="/forgot-password"
+            className="inline-block mt-5 bg-blue-600 text-white px-5 py-3 rounded-xl"
+          >
+            Request New Link
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">

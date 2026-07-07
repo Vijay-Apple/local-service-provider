@@ -5,6 +5,9 @@ import { getServiceDetails } from "../../../services/public/public.service";
 const ServiceDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const params = useParams();
+
+  console.log(params);
 
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,14 +19,19 @@ const ServiceDetails = () => {
   const fetchService = async () => {
     try {
       const res = await getServiceDetails(id);
-      setService(res.data || res);
+
+      setService({
+        ...res.data.service,
+        packages: res.data.packages,
+        reviews: res.data.reviews,
+        faqs: res.data.faqs,
+      });
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
   };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex justify-center items-center text-white">

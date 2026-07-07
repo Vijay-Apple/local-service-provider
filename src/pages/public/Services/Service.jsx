@@ -1,104 +1,64 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-
-const categories = [
-  "All",
-  "Home Services",
-  "Cleaning",
-  "Repair",
-  "Installation",
-];
-
-const servicesData = [
-  {
-    id: 1,
-    name: "AC Repair & Service",
-    category: "Repair",
-    price: 499,
-    duration: "60-90 mins",
-    rating: 4.8,
-    bookings: 1250,
-    image:
-      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: 2,
-    name: "RO Maintenance",
-    category: "Repair",
-    price: 399,
-    duration: "45 mins",
-    rating: 4.7,
-    bookings: 850,
-    image:
-      "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: 3,
-    name: "Deep Home Cleaning",
-    category: "Cleaning",
-    price: 1499,
-    duration: "4-6 hrs",
-    rating: 4.9,
-    bookings: 2100,
-    image:
-      "https://images.unsplash.com/photo-1585421514738-01798e348b17?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: 4,
-    name: "Electrician Service",
-    category: "Home Services",
-    price: 299,
-    duration: "30-60 mins",
-    rating: 4.8,
-    bookings: 1700,
-    image:
-      "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: 5,
-    name: "CCTV Installation",
-    category: "Installation",
-    price: 999,
-    duration: "2-3 hrs",
-    rating: 4.6,
-    bookings: 400,
-    image:
-      "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: 6,
-    name: "Plumbing Service",
-    category: "Home Services",
-    price: 349,
-    duration: "30-90 mins",
-    rating: 4.7,
-    bookings: 1100,
-    image:
-      "https://images.unsplash.com/photo-1621905252472-e8f7be1b6f44?auto=format&fit=crop&w=800&q=80",
-  },
-];
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { getAllServices } from "../../../services/public/public.service";
 
 const Service = () => {
   const navigate = useNavigate();
+
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const fetchServices = async () => {
+    try {
+      setLoading(true);
+
+      const res = await getAllServices();
+
+      setServices(res.data || []);
+    } catch (error) {
+      console.error("Error fetching services:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const categories = useMemo(() => {
+    const cats = services
+      .map((service) => service.category?.name)
+      .filter(Boolean);
+
+    return ["All", ...new Set(cats)];
+  }, [services]);
+
   const filteredServices = useMemo(() => {
-    return servicesData.filter((service) => {
+    return services.filter((service) => {
       const matchSearch = service.name
-        .toLowerCase()
+        ?.toLowerCase()
         .includes(search.toLowerCase());
 
       const matchCategory =
         selectedCategory === "All"
           ? true
-          : service.category === selectedCategory;
+          : service.category?.name === selectedCategory;
 
       return matchSearch && matchCategory;
     });
-  }, [search, selectedCategory]);
+  }, [services, search, selectedCategory]);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        Loading Services...
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-black to-slate-950 text-white">
       {/* HERO */}
@@ -178,18 +138,18 @@ const Service = () => {
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
           {filteredServices.map((service) => (
             <div
-              key={service.id}
+              key={service._id}
               className="group bg-white/5 rounded-3xl overflow-hidden border border-white/10 backdrop-blur-xl hover:border-indigo-500/50 hover:shadow-[0_0_40px_rgba(99,102,241,0.25)] transition-all duration-500 hover:-translate-y-2"
             >
               <div className="relative overflow-hidden">
                 <img
-                  src={service.image}
+                  src={service.image || "https://via.placeholder.com/600x400"}
                   alt={service.name}
                   className="w-full h-64 object-cover group-hover:scale-110 transition duration-700"
                 />
 
                 <div className="absolute top-4 left-4 bg-black/40 backdrop-blur-md border border-indigo-500/30 px-4 py-2 rounded-full text-sm font-semibold text-indigo-300">
-                  {service.category}
+                  {service.category?.name}
                 </div>
               </div>
 
@@ -222,14 +182,14 @@ const Service = () => {
 
                 <div className="flex gap-3 mt-6">
                   <Link
-                    to={`/services/${service.id}`}
+                    to={`/services/${service._id}`}
                     className="flex-1 text-center py-3 rounded-xl border border-white/10 bg-white/5 text-white hover:bg-white/10 font-medium"
                   >
                     Details
                   </Link>
 
                   <button
-                    onClick={() => navigate("/booking")}
+                    onClick={() => navigate(`/booking/${service._id}`)}
                     className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] transition"
                   >
                     Book Now

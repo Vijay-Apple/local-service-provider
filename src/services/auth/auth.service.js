@@ -12,17 +12,23 @@ export const loginUser = async (data) => {
     return response.data;
 };
 
-export const forgotPassword = async (email) => {
-    const response = await apiClient.post(`${API_URL}/forgot-password`, {
-        email,
-    });
-    return response.data;
-};
-
+//reset password
 export const resetPassword = async (token, data) => {
     const response = await apiClient.post(
         `${API_URL}/reset-password/${token}`,
         data
     );
     return response.data;
-};
+}
+export const resetPasswordForm = async (token) => {
+    const response = await apiClient.get(
+        `${API_URL}/reset-password/${token}`
+    );
+    return response.data;
+}
+export const forgotPassword = async (email) => {
+    const response = await apiClient.post(`${API_URL}/forgot-password`, {
+        email,
+    });
+    return response.data;
+}

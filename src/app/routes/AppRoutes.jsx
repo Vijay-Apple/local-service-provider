@@ -21,7 +21,7 @@ import Unauthorized from "../../pages/public/Unauthorized/Unauthorized";
 import Login from "../../pages/auth/Login/Login";
 import Register from "../../pages/auth/Register/Register";
 import ForgotPassword from "../../pages/public/ForgotPassword/ForwordPassword";
-
+import ResetPassword from "../../pages/public/ResetPassword/ResetPassword";
 /* Customer Pages */
 import CustomerDashboard from "../../pages/customer/Dashboard/Dashboard";
 import Bookings from "../../pages/customer/BookingDetails/BookingDetails";
@@ -78,11 +78,11 @@ const router = createBrowserRouter([
         element: <Services />,
       },
       {
-        path: "services/:slug",
+        path: "services/:id",
         element: <ServiceDetails />,
       },
       {
-        path: "booking",
+        path: "booking/:id",
         element: <BookingPage />,
       },
       {
@@ -96,6 +96,10 @@ const router = createBrowserRouter([
       {
         path: "/forgot-password",
         element: <ForgotPassword />,
+      },
+      {
+        path: "/reset-password/:token",
+        element: <ResetPassword />,
       },
       {
         path: "unauthorized",

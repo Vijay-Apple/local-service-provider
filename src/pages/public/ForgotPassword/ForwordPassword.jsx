@@ -1,34 +1,49 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { forgotPassword } from "../../../services/auth/auth.service";
-
 const ForgotPassword = () => {
-  const [email, setEmail] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+  });
+
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [resetUrl, setResetUrl] = useState("");
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       setLoading(true);
-      setMessage("");
       setError("");
+      setSuccess("");
+      setResetUrl("");
 
-      const response = await forgotPassword(email);
+      const response = await forgotPassword(formData.email);
 
-      setMessage(response.message || "Password reset link sent successfully");
-      setEmail("");
+      if (response.success) {
+        setSuccess(response.message || "Password reset link sent successfully");
 
-      // Testing ke liye agar backend resetUrl bhej raha hai
-      if (response.resetUrl) {
-        console.log("Reset URL:", response.resetUrl);
+        // Development/Test Mode
+        if (response.resetUrl) {
+          setResetUrl(response.resetUrl);
+        }
+
+        setFormData({
+          email: "",
+        });
       }
     } catch (err) {
       setError(
-        err?.response?.data?.message ||
-          "Something went wrong. Please try again.",
+        err?.response?.data?.message || "Failed to send reset password link",
       );
     } finally {
       setLoading(false);
@@ -37,7 +52,6 @@ const ForgotPassword = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Background Effects */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-indigo-600/10 blur-3xl rounded-full" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-600/10 blur-3xl rounded-full" />
 
@@ -47,21 +61,36 @@ const ForgotPassword = () => {
         </h1>
 
         <p className="text-center text-slate-400 mt-3">
-          Enter your registered email address and we'll send you a reset link.
+          Enter your registered email address to receive a password reset link.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-          {/* Success Message */}
-          {message && (
+          {success && (
             <div className="bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-3 rounded-xl">
-              {message}
+              {success}
             </div>
           )}
 
-          {/* Error Message */}
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl">
               {error}
+            </div>
+          )}
+
+          {resetUrl && (
+            <div className="bg-blue-500/10 border border-blue-500/30 text-blue-400 px-4 py-3 rounded-xl break-all">
+              <p className="font-semibold mb-2">
+                Reset Link (Development Mode)
+              </p>
+
+              <a
+                href={resetUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="underline"
+              >
+                {resetUrl}
+              </a>
             </div>
           )}
 
@@ -70,9 +99,10 @@ const ForgotPassword = () => {
 
             <input
               type="email"
+              name="email"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={handleChange}
               placeholder="john@example.com"
               className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-indigo-500 outline-none"
             />
@@ -81,7 +111,7 @@ const ForgotPassword = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl font-semibold transition"
+            className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-3 rounded-xl font-semibold disabled:opacity-50"
           >
             {loading ? "Sending..." : "Send Reset Link"}
           </button>
