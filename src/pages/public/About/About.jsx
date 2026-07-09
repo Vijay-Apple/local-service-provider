@@ -223,7 +223,7 @@ const About = () => {
             </p>
 
             <a
-              href="/services"
+              href="/service"
               className="inline-flex items-center gap-2 mt-8 px-8 py-4 bg-white text-indigo-700 rounded-xl font-semibold"
             >
               Explore Services
